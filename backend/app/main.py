@@ -1,121 +1,205 @@
-"""
-Face Recognition Attendance System API
-A FastAPI-based backend for face recognition attendance tracking
-"""
-
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from contextlib import asynccontextmanager
-import time
-import logging
 import asyncio
+import logging
 
-from app.routers import auth, employees, attendance, embeddings, streaming, cameras, system
-from app.config import settings
-from db.db_config import create_tables
-from core.fts_system import start_tracking_service, shutdown_tracking_service
-
-# Setup logging
-logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Global variable to store the face detection task
+face_detection_task = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan handler for startup and shutdown events."""
-    logger.info("🚀 Starting Face Recognition Attendance System API")
+    """Lifespan event handler for startup and shutdown"""
+    global face_detection_task
     
+    # Startup
+    logger.info("Starting Face Recognition Attendance System...")
     try:
-        # Initialize database tables
-        create_tables()
-        logger.info("✅ Database tables initialized")
+        # Import here to avoid circular imports
+        from backend.core.fts_system import FaceTrackingSystem
         
-        # Start face tracking system in background
-        logger.info("🚀 Starting Face Tracking System...")
-        success = start_tracking_service()
-        if success:
-            logger.info("✅ Face Tracking System started successfully")
-        else:
-            logger.warning("⚠️ Face Tracking System failed to start")
-        
-        logger.info("🎯 Face Recognition Attendance System API is ready!")
-        
+        # Initialize and start the face tracking system
+        fts = FaceTrackingSystem()
+        face_detection_task = asyncio.create_task(fts.run())
+        logger.info("Face detection system started successfully")
     except Exception as e:
-        logger.error(f"❌ Failed to initialize application: {e}")
-        raise
+        logger.error(f"Failed to start face detection system: {e}")
     
     yield
     
-    # Shutdown procedures
-    logger.info("🛑 Shutting down Face Tracking System...")
-    shutdown_tracking_service()
-    logger.info("🛑 Shutting down Face Recognition Attendance System API")
+    # Shutdown
+    logger.info("Shutting down Face Recognition Attendance System...")
+    if face_detection_task:
+        face_detection_task.cancel()
+        try:
+            await face_detection_task
+        except asyncio.CancelledError:
+            logger.info("Face detection system stopped")
 
+# Create FastAPI app with lifespan
 app = FastAPI(
     title="Face Recognition Attendance System",
-    description="Professional backend for face recognition-based attendance tracking with role-based access control",
+    description="A comprehensive attendance management system using face recognition",
     version="1.0.0",
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None,
     lifespan=lifespan
 )
 
-# Request logging middleware
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    
-    logger.info(
-        f"{request.method} {request.url.path} - {response.status_code} - {process_time:.4f}s"
-    )
-    
-    return response
-
-# Security middleware
-if settings.ENVIRONMENT == "production":
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["*"]  # Configure this properly for production
-    )
-
-# CORS setup
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router)
-app.include_router(employees.router)
-app.include_router(attendance.router)
-app.include_router(embeddings.router)
-app.include_router(streaming.router)
-app.include_router(cameras.router)
-app.include_router(system.router)
-
 @app.get("/")
 async def root():
-    """Root endpoint with system information"""
-    return {
-        "message": "Face Recognition Attendance System API",
-        "version": "1.0.0",
-        "status": "running",
-        "docs_url": "/docs" if settings.DEBUG else None
-    }
+    return {"message": "Face Recognition Attendance System API"}
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    return {"status": "healthy", "service": "Face Recognition Attendance System"}
+
+# System endpoints
+@app.get("/system/status")
+async def get_system_status():
+    global face_detection_task
+    is_running = face_detection_task is not None and not face_detection_task.done()
     return {
-        "status": "healthy",
-        "timestamp": time.time(),
-        "environment": settings.ENVIRONMENT
+        "status": "running" if is_running else "stopped",
+        "face_detection_active": is_running
     }
+
+@app.post("/system/start")
+async def start_system():
+    global face_detection_task
+    
+    if face_detection_task and not face_detection_task.done():
+        return {"message": "System is already running"}
+    
+    try:
+        from backend.core.fts_system import FaceTrackingSystem
+        fts = FaceTrackingSystem()
+        face_detection_task = asyncio.create_task(fts.run())
+        return {"message": "System started successfully"}
+    except Exception as e:
+        logger.error(f"Failed to start system: {e}")
+        return {"error": f"Failed to start system: {str(e)}"}
+
+@app.post("/system/stop")
+async def stop_system():
+    global face_detection_task
+    
+    if not face_detection_task or face_detection_task.done():
+        return {"message": "System is not running"}
+    
+    face_detection_task.cancel()
+    try:
+        await face_detection_task
+    except asyncio.CancelledError:
+        pass
+    
+    return {"message": "System stopped successfully"}
+
+# Auth endpoints (mock implementation)
+@app.post("/auth/login")
+async def login():
+    return {
+        "access_token": "mock_token_123",
+        "token_type": "bearer",
+        "user": {
+            "id": 1,
+            "username": "admin",
+            "role": "super_admin"
+        }
+    }
+
+@app.get("/auth/me")
+async def get_current_user():
+    return {
+        "id": 1,
+        "username": "admin",
+        "role": "super_admin",
+        "email": "admin@company.com"
+    }
+
+# Employee endpoints (mock implementation)
+@app.get("/employees/")
+async def get_employees():
+    return [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "department": "Engineering",
+            "email": "john@company.com",
+            "status": "active"
+        },
+        {
+            "id": 2,
+            "name": "Jane Smith",
+            "department": "HR",
+            "email": "jane@company.com",
+            "status": "active"
+        }
+    ]
+
+@app.get("/employees/present/current")
+async def get_present_employees():
+    return [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "department": "Engineering",
+            "check_in_time": "2024-01-15T09:00:00Z"
+        }
+    ]
+
+# Attendance endpoints (mock implementation)
+@app.get("/attendance/all")
+async def get_all_attendance():
+    return [
+        {
+            "id": 1,
+            "employee_id": 1,
+            "employee_name": "John Doe",
+            "date": "2024-01-15",
+            "check_in": "09:00:00",
+            "check_out": "17:30:00",
+            "status": "present"
+        }
+    ]
+
+@app.get("/attendance/me")
+async def get_my_attendance():
+    return [
+        {
+            "id": 1,
+            "date": "2024-01-15",
+            "check_in": "09:00:00",
+            "check_out": "17:30:00",
+            "status": "present",
+            "hours_worked": 8.5
+        }
+    ]
+
+# Camera endpoints (mock implementation)
+@app.get("/cameras")
+async def get_cameras():
+    return [
+        {
+            "id": 1,
+            "name": "Main Entrance",
+            "location": "Building A - Entrance",
+            "status": "active",
+            "ip_address": "192.168.1.100"
+        }
+    ]
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
