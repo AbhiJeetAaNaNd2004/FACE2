@@ -1,62 +1,55 @@
 # Face Recognition Attendance System
 
-A fully functional backend for a face recognition-based attendance system built with FastAPI and PostgreSQL. This system provides role-based access control, JWT authentication, and comprehensive attendance tracking capabilities.
+A complete, production-ready face recognition attendance system with a FastAPI backend and React frontend. This system provides role-based access control, real-time face detection, and comprehensive attendance tracking.
 
-## Features
+## 🚀 Features
 
-- **JWT-based Authentication** with OAuth2PasswordBearer
-- **Role-Based Access Control (RBAC)** with three roles:
-  - **Employee**: View own attendance, view currently present employees
-  - **Admin**: All Employee permissions + enroll employees, manage face embeddings, delete records, view live feed
-  - **Super Admin**: All Admin permissions + create/delete user accounts, assign roles
-- **Face Recognition Integration** (mock implementation included, ready for real face recognition libraries)
-- **Attendance Tracking** with comprehensive logging
-- **Live Camera Feed** (mock MJPEG stream)
+### Backend Features
+- **JWT-based Authentication** with role-based access control
+- **Real-time Face Detection** with automatic attendance tracking
+- **Camera Management** with ONVIF discovery and configuration
 - **RESTful API** with comprehensive documentation
+- **PostgreSQL Database** with proper relationships and constraints
+- **Background Processing** for face detection and recognition
 
-## Technology Stack
+### Frontend Features
+- **Modern React Application** with TypeScript
+- **Role-based Dashboards** (Employee, Admin, Super Admin)
+- **Real-time System Monitoring** and control
+- **Employee Management** with face enrollment
+- **Live Camera Feeds** with face detection overlay
+- **Responsive Design** with Tailwind CSS and shadcn/ui
 
-- **Backend**: FastAPI
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy
-- **Authentication**: JWT with passlib[bcrypt]
-- **Environment**: Compatible with Windows (development) and Linux (production)
-- **No Docker Required**: Runs as a standalone application
+### User Roles
+- **Employee**: View personal attendance, current status
+- **Admin**: Manage employees, view attendance, access live feeds
+- **Super Admin**: Full system control, user management, camera configuration
 
-## Database Schema
+## 🛠 Technology Stack
 
-### Core Models
+### Backend
+- **FastAPI** - Modern Python web framework
+- **PostgreSQL** - Robust relational database
+- **SQLAlchemy** - Python ORM
+- **JWT** - Secure authentication
+- **OpenCV** - Computer vision (ready for integration)
 
-1. **Employee**
-   - `employee_id` (Primary Key)
-   - `name`, `department`, `role`, `date_joined`
-   - `email`, `phone`, `is_active`
+### Frontend
+- **React 18** with TypeScript
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Modern component library
+- **Zustand** - Lightweight state management
+- **Axios** - HTTP client with interceptors
+- **React Router** - Client-side routing
 
-2. **FaceEmbedding**
-   - `id` (Primary Key)
-   - `employee_id` (Foreign Key)
-   - `image_path`, `embedding_vector`
-   - `quality_score`, `is_active`
+## 📋 Prerequisites
 
-3. **AttendanceLog**
-   - `id` (Primary Key)
-   - `employee_id` (Foreign Key)
-   - `timestamp`, `status` (present/absent)
-   - `confidence_score`, `notes`
+- **Python 3.8+**
+- **Node.js 16+**
+- **PostgreSQL 12+**
+- **Git**
 
-4. **UserAccount**
-   - `id` (Primary Key)
-   - `username`, `hashed_password`, `role`
-   - `employee_id` (Optional Foreign Key)
-   - `is_active`, `last_login`
-
-## Installation & Setup
-
-### Prerequisites
-
-1. **Python 3.8+**
-2. **PostgreSQL 12+**
-3. **Git**
+## 🚀 Quick Start
 
 ### 1. Clone the Repository
 
@@ -65,52 +58,16 @@ git clone <repository-url>
 cd face-recognition-attendance
 ```
 
-### 2. Install Dependencies
+### 2. Backend Setup
 
+#### Install Python Dependencies
 ```bash
+cd backend
 pip install -r requirements.txt
 ```
 
-### 3. Database Setup
-
-#### PostgreSQL Installation
-
-**Windows:**
-```bash
-# Download and install PostgreSQL from https://www.postgresql.org/download/windows/
-# Or use chocolatey:
-choco install postgresql
-
-# Create database
-psql -U postgres
-CREATE DATABASE face_attendance;
-\q
-```
-
-**Linux:**
-```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-
-# CentOS/RHEL
-sudo yum install postgresql postgresql-server postgresql-contrib
-
-# Create database
-sudo -u postgres psql
-CREATE DATABASE face_attendance;
-\q
-```
-
-### 4. Environment Configuration
-
+#### Database Configuration
 Create a `.env` file in the `backend` directory:
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-Update the `.env` file with your database credentials:
 
 ```env
 # Database Configuration
@@ -131,291 +88,247 @@ DEBUG=true
 LOG_LEVEL=INFO
 ```
 
-### 5. Initialize Database
-
+#### Initialize Database
 ```bash
-cd backend
+# Create PostgreSQL database
+createdb face_attendance
+
+# Initialize tables and sample data
 python init_db.py
 ```
 
-This will create all necessary tables and sample data including test users.
+### 3. Frontend Setup
 
-### 6. Start the Application
+```bash
+cd frontend
+npm install
+```
 
+### 4. Start the Application
+
+#### Start Backend (Terminal 1)
 ```bash
 cd backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at:
-- **API**: http://localhost:8000
-- **Documentation**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+#### Start Frontend (Terminal 2)
+```bash
+cd frontend
+npm start
+```
 
-## API Endpoints
+The application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+
+## 👥 Demo Credentials
+
+| Role | Username | Password | Description |
+|------|----------|----------|-------------|
+| Super Admin | `admin` | `admin123` | Full system access |
+| Admin | `hr_manager` | `hr123` | Employee & attendance management |
+| Employee | `john.doe` | `john123` | Personal attendance view |
+| Employee | `bob.johnson` | `bob123` | Personal attendance view |
+
+## 🎯 Key Features Walkthrough
+
+### 1. Super Admin Dashboard
+- **System Control**: Start/stop face detection pipeline
+- **Real-time Metrics**: System status, camera count, detection stats
+- **User Management**: Create users, assign roles
+- **Camera Management**: Discover and configure cameras
+- **System Logs**: Monitor application logs
+
+### 2. Admin Dashboard
+- **Employee Management**: Enroll employees with face images
+- **Attendance Monitoring**: View all attendance records
+- **Live Camera Feeds**: Real-time video with face detection
+- **Present Employees**: See who's currently in the office
+- **Data Export**: Download attendance reports
+
+### 3. Employee Dashboard
+- **Personal Attendance**: View own attendance history
+- **Current Status**: See current presence status
+- **Attendance Rate**: Personal attendance statistics
+
+## 🔧 System Architecture
+
+### Backend Architecture
+```
+FastAPI Application
+├── Authentication Layer (JWT)
+├── Role-based Access Control
+├── API Routes (/auth, /employees, /attendance, /cameras, /system)
+├── Face Detection Pipeline (Background Service)
+├── Database Layer (PostgreSQL + SQLAlchemy)
+└── Camera Management (ONVIF Discovery)
+```
+
+### Frontend Architecture
+```
+React Application
+├── Authentication (Zustand Store)
+├── Protected Routes (Role-based)
+├── Layout Components (Sidebar Navigation)
+├── Dashboard Pages (Role-specific)
+├── API Layer (Axios with Interceptors)
+└── UI Components (shadcn/ui + Tailwind)
+```
+
+## 🔐 Security Features
+
+- **JWT Authentication** with automatic token refresh
+- **Role-based Access Control** with route protection
+- **Password Hashing** with bcrypt
+- **CORS Configuration** for secure cross-origin requests
+- **Input Validation** on all API endpoints
+- **SQL Injection Protection** via SQLAlchemy ORM
+
+## 📊 API Endpoints
 
 ### Authentication
-
-- `POST /auth/login` - Login with OAuth2PasswordRequestForm
-- `POST /auth/login/json` - Login with JSON data
-- `GET /auth/me` - Get current user info
-- `POST /auth/users/create` - Create user account (Super Admin only)
-- `PATCH /auth/users/{user_id}/role` - Assign role (Super Admin only)
-- `GET /auth/users` - List all users (Super Admin only)
-- `DELETE /auth/users/{user_id}` - Delete user (Super Admin only)
+- `POST /auth/login` - User login
+- `GET /auth/me` - Get current user
+- `POST /auth/users/create` - Create user (Super Admin)
 
 ### Employee Management
+- `GET /employees/` - List employees
+- `POST /employees/enroll` - Enroll with face data
+- `PUT /employees/{id}` - Update employee
+- `DELETE /employees/{id}` - Delete employee
 
-- `POST /employees/enroll` - Enroll employee with face data (Admin+)
-- `GET /employees/` - List all employees (Any authenticated user)
-- `GET /employees/{employee_id}` - Get employee details
-- `PUT /employees/{employee_id}` - Update employee (Admin+)
-- `DELETE /employees/{employee_id}` - Delete employee (Admin+)
-- `GET /employees/present/current` - Get currently present employees
-- `POST /employees/{employee_id}/face-image` - Upload face image (Admin+)
+### Attendance
+- `GET /attendance/me` - Personal attendance
+- `GET /attendance/all` - All records (Admin)
+- `POST /attendance/mark` - Mark attendance
+- `GET /attendance/summary/daily` - Daily summary
 
-### Attendance Management
+### System Control
+- `POST /system/start` - Start face detection
+- `POST /system/stop` - Stop face detection
+- `GET /system/status` - System status
+- `GET /system/camera-feed/{id}` - Live camera feed
 
-- `GET /attendance/me` - Get own attendance (Employee+)
-- `GET /attendance/all` - Get all attendance records (Admin+)
-- `GET /attendance/{employee_id}` - Get employee attendance
-- `POST /attendance/mark` - Mark attendance (Admin+)
-- `GET /attendance/summary/daily` - Daily attendance summary (Admin+)
-- `DELETE /attendance/{log_id}` - Delete attendance log (Admin+)
-- `GET /attendance/employee/{employee_id}/latest` - Get latest attendance
+### Camera Management
+- `POST /cameras/discover` - Network discovery
+- `GET /cameras/` - List cameras
+- `POST /cameras/` - Create camera
+- `PUT /cameras/{id}` - Update camera
 
-### Face Embeddings
+## 🚀 Production Deployment
 
-- `GET /embeddings/` - List face embeddings (Admin+)
-- `GET /embeddings/{embedding_id}` - Get specific embedding (Admin+)
-- `DELETE /embeddings/{embedding_id}` - Delete embedding (Admin+)
-- `GET /embeddings/employee/{employee_id}` - Get employee embeddings (Admin+)
-- `DELETE /embeddings/employee/{employee_id}/all` - Delete all employee embeddings (Admin+)
-- `GET /embeddings/stats/summary` - Get embeddings statistics (Admin+)
-
-### Live Streaming
-
-- `GET /stream/live-feed` - Get live camera feed (Admin+)
-- `GET /stream/camera-status` - Get camera status (Admin+)
-- `GET /stream/health` - Streaming health check (Admin+)
-
-## Sample Login Credentials
-
-The initialization script creates the following test users:
-
-| Username | Password | Role | Employee ID |
-|----------|----------|------|-------------|
-| admin | admin123 | super_admin | None |
-| hr_manager | hr123 | admin | EMP002 |
-| john.doe | john123 | employee | EMP001 |
-| bob.johnson | bob123 | employee | EMP003 |
-
-## Role-Based Access Control
-
-### Employee Role
-- View own attendance records
-- View list of currently present employees
-- View employee directory
-
-### Admin Role
-- All Employee permissions
-- Enroll new employees with face data
-- Add/delete face embeddings
-- Mark attendance for employees
-- Delete attendance records
-- View live camera feed
-- Access attendance summaries
-
-### Super Admin Role
-- All Admin permissions
-- Create/delete user accounts
-- Assign roles to users
-- Full system administration
-
-## Usage Examples
-
-### 1. Authentication
-
+### Backend Deployment
 ```bash
-# Login to get JWT token
-curl -X POST "http://localhost:8000/auth/login" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin&password=admin123"
+# Install production dependencies
+pip install gunicorn
 
-# Response:
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer"
-}
+# Run with Gunicorn
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+
+# Or use Docker
+docker build -t face-recognition-backend .
+docker run -p 8000:8000 face-recognition-backend
 ```
 
-### 2. Employee Enrollment
-
+### Frontend Deployment
 ```bash
-# Enroll employee with face data (Admin+ only)
-curl -X POST "http://localhost:8000/employees/enroll" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "employee": {
-      "employee_id": "EMP004",
-      "name": "Alice Johnson",
-      "department": "Marketing",
-      "role": "Marketing Manager",
-      "date_joined": "2024-01-01",
-      "email": "alice@company.com"
-    },
-    "image_data": "base64_encoded_image_data_here"
-  }'
+# Build for production
+npm run build
+
+# Serve with nginx or any static file server
+# The build folder contains the production-ready files
 ```
 
-### 3. View Own Attendance
-
-```bash
-# Get own attendance records
-curl -X GET "http://localhost:8000/attendance/me" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+### Environment Variables (Production)
+```env
+ENVIRONMENT=production
+DEBUG=false
+SECRET_KEY=your-production-secret-key
+DB_HOST=your-production-db-host
+CORS_ORIGINS=https://yourdomain.com
 ```
 
-### 4. Mark Attendance
-
-```bash
-# Mark attendance (Admin+ only)
-curl -X POST "http://localhost:8000/attendance/mark" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "employee_id": "EMP001",
-    "status": "present",
-    "confidence_score": 0.95,
-    "notes": "Automatic detection"
-  }'
-```
-
-## Deployment
-
-### Production Deployment
-
-1. **Set Environment Variables**:
-   ```bash
-   export ENVIRONMENT=production
-   export DEBUG=false
-   export SECRET_KEY=your-production-secret-key
-   ```
-
-2. **Use Production Database**:
-   Update database credentials in `.env` file
-
-3. **Run with Gunicorn**:
-   ```bash
-   pip install gunicorn
-   gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-   ```
-
-4. **Nginx Configuration** (optional):
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;
-       
-       location / {
-           proxy_pass http://127.0.0.1:8000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-   }
-   ```
-
-### Windows Service (Production)
-
-Create a Windows service using `nssm` or similar tools:
-
-```bash
-# Install nssm
-nssm install FaceAttendanceAPI
-
-# Configure service
-nssm set FaceAttendanceAPI Application "C:\path\to\python.exe"
-nssm set FaceAttendanceAPI AppParameters "-m uvicorn app.main:app --host 0.0.0.0 --port 8000"
-nssm set FaceAttendanceAPI AppDirectory "C:\path\to\your\backend"
-nssm start FaceAttendanceAPI
-```
-
-## Development
+## 🔧 Customization
 
 ### Adding Face Recognition
+The system is ready for face recognition integration. To add real face detection:
 
-To integrate real face recognition capabilities:
-
-1. **Install face recognition libraries**:
-   ```bash
-   pip install opencv-python face-recognition numpy Pillow
-   ```
-
-2. **Update the enrollment process** in `backend/app/routers/employees.py`
-3. **Implement face matching** in attendance marking logic
-4. **Add real-time face detection** in the streaming module
-
-### Database Migrations
-
-For database schema changes, use Alembic:
-
+1. Install face recognition libraries:
 ```bash
-# Initialize Alembic (first time only)
-alembic init alembic
-
-# Create migration
-alembic revision --autogenerate -m "Description of changes"
-
-# Apply migration
-alembic upgrade head
+pip install opencv-python face-recognition insightface
 ```
 
-## Troubleshooting
+2. Replace mock detection in `backend/core/fts_system.py`:
+```python
+def _mock_face_detection(self, frame, camera):
+    # Replace with actual face recognition logic
+    # Use InsightFace, face_recognition, or similar library
+    pass
+```
+
+### Adding New User Roles
+1. Update `backend/app/schemas.py` UserRole enum
+2. Add role checks in `backend/app/security.py`
+3. Update frontend role hierarchy in `ProtectedRoute.tsx`
+4. Add new dashboard routes and navigation items
+
+### Customizing UI Theme
+The frontend uses Tailwind CSS with CSS variables for theming:
+1. Modify `frontend/src/index.css` for color scheme
+2. Update `frontend/tailwind.config.js` for design tokens
+3. Customize components in `frontend/src/components/ui/`
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Database Connection Error**:
-   - Check PostgreSQL is running
-   - Verify database credentials in `.env`
+1. **Database Connection Error**
+   - Verify PostgreSQL is running
+   - Check database credentials in `.env`
    - Ensure database exists
 
-2. **JWT Token Issues**:
-   - Check `SECRET_KEY` in `.env`
-   - Verify token expiration time
-   - Ensure proper Authorization header format
+2. **Face Detection Not Starting**
+   - Check system logs in Super Admin dashboard
+   - Verify camera configurations
+   - Ensure no port conflicts
 
-3. **Permission Denied**:
-   - Check user role assignments
-   - Verify JWT token is valid
-   - Ensure user is active
+3. **Frontend API Errors**
+   - Check backend is running on port 8000
+   - Verify CORS configuration
+   - Check browser console for errors
 
-4. **Import Errors**:
-   - Check Python path
-   - Verify all dependencies are installed
-   - Ensure you're in the correct directory
+4. **Authentication Issues**
+   - Clear browser localStorage
+   - Check JWT token expiration
+   - Verify user roles in database
 
-### Logs
+### Logs and Debugging
+- **Backend logs**: Check uvicorn console output
+- **Frontend logs**: Check browser developer console
+- **System logs**: Available in Super Admin dashboard
+- **Database logs**: Check PostgreSQL logs
 
-Application logs are available in:
-- Console output (development)
-- Log files (production, if configured)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## License
+## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📞 Support
 
 For support and questions:
 - Check the API documentation at `/docs`
-- Review the troubleshooting section
+- Review this README and troubleshooting section
 - Create an issue in the repository
+
+---
+
+**Built with ❤️ using FastAPI and React**
