@@ -9,10 +9,12 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from contextlib import asynccontextmanager
 import time
 import logging
+import asyncio
 
 from app.routers import auth, employees, attendance, embeddings, streaming, cameras, system
 from app.config import settings
 from db.db_config import create_tables
+from core.fts_system import start_tracking_service, shutdown_tracking_service
 
 # Setup logging
 logging.basicConfig(
@@ -31,6 +33,14 @@ async def lifespan(app: FastAPI):
         create_tables()
         logger.info("✅ Database tables initialized")
         
+        # Start face tracking system in background
+        logger.info("🚀 Starting Face Tracking System...")
+        success = start_tracking_service()
+        if success:
+            logger.info("✅ Face Tracking System started successfully")
+        else:
+            logger.warning("⚠️ Face Tracking System failed to start")
+        
         logger.info("🎯 Face Recognition Attendance System API is ready!")
         
     except Exception as e:
@@ -40,6 +50,8 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown procedures
+    logger.info("🛑 Shutting down Face Tracking System...")
+    shutdown_tracking_service()
     logger.info("🛑 Shutting down Face Recognition Attendance System API")
 
 app = FastAPI(
